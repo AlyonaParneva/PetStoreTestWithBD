@@ -5,6 +5,8 @@ import org.testng.annotations.Test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class PetStoreTest extends BaseTest{
 
@@ -21,6 +23,15 @@ public class PetStoreTest extends BaseTest{
                 .body("tags.name",hasItem("test"))
                 .body("status",equalTo("available"));
 
+        boolean addPetDb= petStorageDatabase.addPetIntoDB(
+                1,
+                2,
+                "dog",
+                "TestPet",
+                3,
+                "test",
+                "available");
+        assertTrue(addPetDb,"Failed to add pet to the database");
     }
 
     @Test(dependsOnMethods = "testAddNewPet")
@@ -30,6 +41,8 @@ public class PetStoreTest extends BaseTest{
         response.then()
                 .statusCode(200);
 
+        boolean petInDB= petStorageDatabase.PetInDB(1);
+        assertTrue(petInDB, "Pet with ID 1 was not found in the database!");
     }
 
     @Test(dependsOnMethods = "testGetPetById")
@@ -37,13 +50,20 @@ public class PetStoreTest extends BaseTest{
         Response response= petStoragePage.getPetByStatus("available");
         response.then()
                 .statusCode(200);
+
+        boolean isPetInDBWithStatus = petStorageDatabase.PetInDBWithStatus("available");
+        assertTrue(isPetInDBWithStatus, "No pets with status 'available' found in the database!");
     }
+
 
     @Test(dependsOnMethods = "testGetPetByStatus")
     public void testPostPetUpdate(){
         Response response= petStoragePage.postPetUpdate(1,"NewTestPet","sold");
         response.then()
                 .statusCode(200);
+
+        boolean updatePostPetDB= petStorageDatabase.updatePostPetInDB(1,"NewTestPet","sold");
+        assertTrue(updatePostPetDB,"Pet with ID 1 was not correctly updated in the database!");
     }
 
     @Test(dependsOnMethods = "testPostPetUpdate")
@@ -58,6 +78,16 @@ public class PetStoreTest extends BaseTest{
                 .body("tags.id",hasItem(3))
                 .body("tags.name",hasItem("test"))
                 .body("status",equalTo("available"));
+
+        boolean updatePutPetDB = petStorageDatabase.updatePutPetInDB(
+                1,
+                0,
+                "dog",
+                "TestPetUpdate",
+                3,
+                "test",
+                "available");
+        assertTrue(updatePutPetDB, "Pet with ID 1 was not correctly updated in the database!");
     }
 
     @Test(dependsOnMethods = "testPutPetUpdate")
@@ -66,6 +96,9 @@ public class PetStoreTest extends BaseTest{
 
         response.then()
                 .statusCode(200);
+
+        boolean updatePetPhotoDB= petStorageDatabase.updatePetPhotoInDB(1,"src//main//java//PetStore//img//dog1.jpg");
+        assertTrue(updatePetPhotoDB,"Photo URL for pet with ID 1 was not correctly updated in the database!");
     }
 
     @Test(dependsOnMethods = "testPostPetUploadImage")
@@ -73,6 +106,8 @@ public class PetStoreTest extends BaseTest{
         Response response= petStoragePage.deletePet(1);
         response.then()
                 .statusCode(200);
+
+        petStorageDatabase.deletePetFromDB(1);
     }
 
     @Test(dependsOnMethods = "testDeletePet")
@@ -82,7 +117,7 @@ public class PetStoreTest extends BaseTest{
         response.then()
                 .statusCode(404);
 
+        boolean petInDB= petStorageDatabase.PetInDB(1);
+        assertFalse(petInDB, "Pet with ID 1 is still found in the database after deletion!");
     }
-
-
 }
